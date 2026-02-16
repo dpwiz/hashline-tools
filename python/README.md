@@ -1,19 +1,97 @@
-I was following [Pi](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent) agent development, and intrigued by [oh-my-pi](https://github.com/can1357/oh-my-pi), but decided to start building on top of opencode instead.
-I am starting to regret that decision, but will see how far it goes.
+# hashline-tools
 
-[Vibe-kit Disclaimer](https://github.com/gtrak/vibe-kit/blob/main/DISCLAIMER.md)
+A Python CLI tool for editing files using hash-anchored line references. This tool is designed to provide safe, verifiable file edits by ensuring that the context (line content) matches a hash before applying changes.
 
-I absolutely loved this blog post https://blog.can.ac/2026/02/12/the-harness-problem/ because I see failed edits constantly with Local LLMs, and this is a novel approach.
-Is it very novel though? BASIC had lines that start with indexes, too.  I want to use it, anyway. GOTO 200.
+## Features
 
-200 I am attempting to create a CLI version of this edit tool for later opencode integration, but it might stand alone. This was initially ported from oh-my-pi with LLM help
-into an opencode tool, then later extracted as a Rust CLI.
+-   **Hash-Based Anchors**: Each line is identified by a line number and a hash of its content (ignoring whitespace).
+-   **Safe Edits**: Modifications are only applied if the target line's hash matches the expected value, preventing edits on stale file versions.
+-   **Operations**:
+    -   `read`: Read a file with line numbers and hashes.
+    -   `edit`: Apply a set of JSON-encoded edit operations (`set_line`, `replace_lines`, `insert_after`, `replace`).
 
-## Usage in OpenCode
-Run `cargo install --path .` or create a wrapper script called 'hashline-tools' over cargo run.
+## Installation
 
-Copy the typescript wrappers to ~/.config/opencode/tools or a specific project.
+This project is managed with `uv`.
 
-## Known issues
-Diffs are not yet displaying properly in opencode. I'm not sure if opencode will allow it without deeper
-modification.
+```bash
+# Install dependencies
+uv sync
+```
+
+## Usage
+
+You can run the tool directly using `uv run`.
+
+### Reading a File
+
+Read a file to get line numbers and their corresponding hashes:
+
+```bash
+uv run python -m hashline_tools.cli read <file_path> [--offset N] [--limit N]
+```
+
+Output format:
+```
+<file>
+1:hash1|Line content 1
+2:hash2|Line content 2
+...
+</file>
+```
+
+### Editing a File
+
+Apply edits using a JSON string:
+
+```bash
+uv run python -m hashline_tools.cli edit <file_path> --edits '[...]'
+```
+
+#### Edit Operations
+
+1.  **Set Line**: Replace a specific line.
+    ```json
+    {
+      "type": "set_line",
+      "anchor": "LINE_NUM:HASH",
+      "new_text": "New content"
+    }
+    ```
+
+2.  **Replace Lines**: Replace a range of lines.
+    ```json
+    {
+      "type": "replace_lines",
+      "start_anchor": "START_LINE:HASH",
+      "end_anchor": "END_LINE:HASH",
+      "new_text": "New content\nacross multiple lines"
+    }
+    ```
+
+3.  **Insert After**: Insert text after a specific line.
+    ```json
+    {
+      "type": "insert_after",
+      "anchor": "LINE_NUM:HASH",
+      "text": "Inserted content"
+    }
+    ```
+
+4.  **Replace (Text)**: Find and replace text within the file.
+    ```json
+    {
+      "type": "replace",
+      "old_text": "foo",
+      "new_text": "bar",
+      "all": false
+    }
+    ```
+
+## Development
+
+Run tests using `pytest`:
+
+```bash
+uv run pytest
+```
