@@ -1,0 +1,25 @@
+[project]
+name = "hashline-tools"
+version = "0.1.0"
+description = "Hashline tools for opencode"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "xxhash",
+    "click",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+hashline-tools = "hashline_tools.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hashline_tools"]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
